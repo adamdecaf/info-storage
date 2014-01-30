@@ -95,3 +95,9 @@ is a classification problem.
   * Example: car, cars, car's, cars' -> car
 * Lemmatization implies doing "proper" reduction to dictionary headword form (the lemma).
 * Inflectional morphology (cutting -> cut) vs derivation morphology (destruction -> destroy).
+
+## Correcting Documents
+
+* We're not interested in ineractive spelling correction.
+* In IR, we use document correction largely for OCR'ed documents.
+* In general, don't change the documents.
