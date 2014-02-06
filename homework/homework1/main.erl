@@ -86,6 +86,8 @@ spawn_token_record_grouper() ->
 
 %% This is just a recursive function to find the record if it exists
 %% update it, or add a new instance of it.
+%% todo: change this to an actor that builds up everything?
+%%       ^ will need a done message then.
 build_token_records(TokenList, Document, Accum) ->
     if
         ((length(TokenList) == 0) and (length(Accum) /= 0)) -> Accum;
