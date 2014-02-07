@@ -22,7 +22,7 @@ print_usage_info() ->
 spawn_worker_manager() ->
     receive
         {'make_inverted_index', FileName} ->
-            io:format("Making Inverted Index for file: ~w\n", [FileName]),
+            %%io:format("Making Inverted Index for file: ~w\n", [FileName]),
             IndexCollector = spawn(fun() -> spawn_index_collector() end),
             Document = random:uniform(100000),
             spawn(fun() -> spawn_file_parser() end) ! {'parse_file', FileName, Document, IndexCollector},
@@ -35,10 +35,14 @@ spawn_index_collector() ->
     receive
         {'document_token_records', TokenRecords} ->
             PartOfTheTokens = lists:sublist(TokenRecords, 10),
-            io:format("Index Collector ~s", [PartOfTheTokens]),
+            io:format("Index Collector ~w\n", [PartOfTheTokens]),
+            FileData = lists:foldl(fun({Token, Documents}, Acc) ->
+                                           Line = string:concat(string:concat(Token, " -- "), io_lib:format("~w", Documents)),
+                                           string:concat(string:concat(Line, "\n"), Acc) end, "", TokenRecords),
+            file:write_file("document.idx", FileData, [append]),
             spawn_index_collector();
         Unhandled ->
-            io:format("Got some other unhandled message: ~w", [Unhandled]),
+            %%io:format("Got some other unhandled message: ~w", [Unhandled]),
             spawn_index_collector()
     end.
 
@@ -50,20 +54,23 @@ spawn_index_collector() ->
 spawn_file_parser() ->
     receive
         {'parse_file', FileName, Document, IndexCollector} ->
+            FileData = string:concat(string:concat("Document: ", integer_to_list(Document)), "\n"),
+            file:write_file("document.idx", FileData, [append]),
+
             Lines = read_file_lines(FileName),
             LineCount = length(Lines),
-            io:format("Read ~w lines from ~w\n", [LineCount, FileName]),
+            %%io:format("Read ~w lines from ~w\n", [LineCount, FileName]),
 
             %% Flatten all the tokens we've gathered from the lines into one list.
             Tokens = lists:flatmap(fun(Line) -> string:tokens(Line, " ") end, Lines),
             TokensCount = length(Tokens),
-            io:format("Read ~w tokens from ~w\n", [TokensCount, FileName]),
+            %%io:format("Read ~w tokens from ~w\n", [TokensCount, FileName]),
 
             %% Strip bad tokens
             %% Here, is_valid_token just takes strings that are made up of a-z (ignoring case) or numbers.
             %% todo: Expand to allow for certain symbols, but we'll need to filter those out.
             FilteredTokens = lists:filter(fun(T) -> is_valid_token(T) end, Tokens),
-            FilteredTokenList = lists:map(fun(T) -> string:concat(string:to_lower(T), "\n") end, FilteredTokens),
+            FilteredTokenList = lists:map(fun(T) -> string:concat(string:to_lower(string:strip(T)), "\n") end, FilteredTokens),
             %% io:format("Filtered down to ~s tokens", [FilteredTokenList]), %% prints a lot of stuff.
 
             %% send these off to another pid that can handle building the index.
@@ -78,27 +85,18 @@ spawn_token_record_grouper() ->
     receive
         {'create_token_records', TokenList, Document, IndexCollector} ->
             io:format("Creating token_records for Document ~w\n", [Document]),
-            TokenRecords = build_token_records(TokenList, Document, []),
-            io:format("Done building ~w token records via recursion for Document ~w\n", [TokenRecords, Document]),
+            %%TokenRecords = build_token_records(TokenList, Document, []),
+            TokenRecords = lists:map(fun(T) -> {T, [Document]} end, TokenList),
+            %%io:format("Done building ~w token records via recursion for Document ~w\n", [TokenRecords, Document]),
             IndexCollector ! {'document_token_records', TokenRecords},
             spawn_token_record_grouper()
     end.
 
 %% This is just a recursive function to find the record if it exists
 %% update it, or add a new instance of it.
-%% todo: change this to an actor that builds up everything?
-%%       ^ will need a done message then.
-build_token_records(TokenList, Document, Accum) ->
-    if
-        ((length(TokenList) == 0) and (length(Accum) /= 0)) -> Accum;
-        true ->
-            Token = lists:nth(1, TokenList),
-            Tail = lists:nthtail(1, TokenList),
-            case lists:keyfind(Token, 1, TokenList) of
-                {_, Documents} -> build_token_records(Tail, Document, [{Token, [Document] ++ [Documents]}] ++ Accum);
-                _ -> build_token_records(Tail, Document, [{Token, [Document]}] ++ Accum)
-            end
-    end.
+%% build_token_records(TokenList, Document, Accum) ->
+    %% Fold over the Tokens and see if they're in the document or not. accum results.
+
 
 %% utility function for seeing if token is valid
 is_valid_token(Token) ->
@@ -116,7 +114,6 @@ read_file_lines(FileName) ->
               after file:close(Reader)
               end;
         {_, Error} ->
-            io:format("We got some weird error.. ~w\n", [Error]),
             {failure, Error};
         _ ->
             {failure, "Wow, we really got some weird error.\n"}
@@ -140,6 +137,8 @@ main(Args) ->
     if length(Args) == 0 ->
             spawn(fun() -> print_usage_info() end);
        true ->
+            file:write_file("document.idx", "", [write]),
+            file:write_file("document.idx", "# INPUT DOCUMENT REFERENCE LEGEND\n", [append]),
             WorkerManager = spawn(fun() -> spawn_worker_manager() end),
             Procs = lists:foreach(fun(F) -> WorkerManager ! {'make_inverted_index', F} end, Args),
             io:format("~w\n", [Procs])
