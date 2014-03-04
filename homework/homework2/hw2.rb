@@ -25,14 +25,17 @@ FLAGS
   --help, -h  Displays this help message
 
   --stemming=porters,none (default)
+
+  --exclude-stop-words
 EOF
 
 def parse_command_args()
   args = ARGV
   pretty_args = {
     :help => false,
+    :files => [],
     :stemming => :none,
-    :files => []
+    :remove_stop_words => false
   }
   args.each { |a|
     arg = a.downcase
@@ -43,6 +46,8 @@ def parse_command_args()
       if (arg.include?("porter"))
         pretty_args[:stemming] = :porters
       end
+    elsif (arg.include?("--exclude-stop-words"))
+      pretty_args[:remove_stop_words] = true
     else
       if (File.exists?(arg) and File.readable?(arg))
         pretty_args[:files].push arg
@@ -140,6 +145,19 @@ def apply_stemming(word, stemming_type)
   end
 end
 
+## Taken from: http://www.textfixer.com/resources/common-english-words.txt
+STOP_WORDS = [
+'a','able','about','across','after','all','almost','also','am','among','an','and','any','are','as','at','be','because','been','but','by','can','cannot','could','dear','did','do','does','either','else','ever','every','for','from','get','got','had','has','have','he','her','hers','him','his','how','however','i','if','in','into','is','it','its','just','least','let','like','likely','may','me','might','most','must','my','neither','no','nor','not','of','off','often','on','only','or','other','our','own','rather','said','say','says','she','should','since','so','some','than','that','the','their','them','then','there','these','they','this','tis','to','too','twas','us','wants','was','we','were','what','when','where','which','while','who','whom','why','will','with','would','yet','you','your'
+]
+
+def maybe_filter_stop_words(positional_index, remove_stop_words)
+  if positional_index.empty? or !remove_stop_words
+    positional_index
+  else
+    positional_index.reject { |pidx| STOP_WORDS.include?(pidx[:term]) }
+  end
+end
+
 def generate_inverted_index(file_contents, stemming_type)
   stemmed_words = file_contents.split.map { |w|
     apply_stemming(clean_word(w), stemming_type)
@@ -232,8 +250,11 @@ def initialize_program()
     ## Merge all files positional indexes into one.
     positional_index = merge_individitual_inverted_indexes(files_with_indexes)
 
+    ## Optionally remove stop words.
+    possibly_stop_words_filtered_out = maybe_filter_stop_words(positional_index, parsed_args[:remove_stop_words])
+
     ## Write the positional index to a file.
-    write_positional_indexes(positional_index)
+    write_positional_indexes(possibly_stop_words_filtered_out)
   end
 end
 
