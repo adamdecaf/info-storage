@@ -1,0 +1,14 @@
+Treat the task initially as simply a generation of a positional postings for a single
+input file specified on the command line.  Your output index will simply have 1 reference
+document and each term's posititional index in the document.  This will give you the
+opportunity to check the terms that you're generating for the dictionary and help you
+to generalize to the case where you have multiple input files.
+
+Run the program on your program  That is to say, use the program source code as the file
+that is being parsed.  Make sure that you are stripping out punctuation appropriately.
+[The first thing that I do when grading your program is to run the program on your program
+and look at the results.]
+
+If you develop on your own resources, periodically push the code up to storm.cs.uni.edu to
+compile and run.  Don't get into the situation where you're scrambling to adhere to the
+submission requirements at the last minute.
