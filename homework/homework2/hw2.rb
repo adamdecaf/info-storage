@@ -7,14 +7,6 @@
 ##
 require 'securerandom'
 
-## Steps
-## [x] 1. Read n input files, verify they're readable, otherwise print usage statement.
-## [ ] 2. Generate inverted index list for the tokens in the documents
-##    [ ] 1. Parse cli flags for sibjective heuristics for the dictionary generation. (Stemming)
-##    [ ] 2. Lowercase and strip punctuation.
-## [ ] 3. Open Output file, called document.pidx
-## [ ] 4. Write output file in format given below.
-
 USAGE_STATEMENT = <<EOF
 USAGE
 This program is desinged to create an inverted positional index of a series of given input files.
