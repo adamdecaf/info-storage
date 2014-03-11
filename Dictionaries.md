@@ -48,3 +48,18 @@ The dictionary is the data structure for storing the term vocab.
 * Slightly slower search `O(log M)` where `M` is the size of the vocab.
   * `O(log M)` only holds for _balanced_ trees.
 * B-tree mitigate the rebalancing problem.
+
+## Compression
+
+* The dictionary is small compared to the postings file.
+  * But, we want to keep it in memory, so it's fast.
+  * Competition with other applications, cell phones, onboard computers, fast startup time.
+* On average, we are wasting a lot of storage using fixed width space to store everything.
+  * Store all terms in one long string with a pointer to it in the table.
+  * Can really trim down the storage, by using pointers to each term.
+  * In the Reuters collection, we can save ~32% just from this strategy.
+* What if you store every string like: "7systile9syzygetic"
+  * Could setup blocking, use 4x3 bytes for term pointers without blocking
+  * 3 bytes for one pointer plus 4 bytes to indivate the length
+  * So, we save 12 - (3+4) = 5 bytes per block.
+    * Total savings of 1/2MB
