@@ -14,9 +14,19 @@
 * Offset is the gap in binary, with the leading bit chopped off.
 * For example, 13 -> 1101 -> 101 = offset
 * Length is the length of offset
+  * `G = (trimmed binary representation)`
+  * length of offset i `floor(lb(G))` bits
+  * length of length is `floor(lb(G)) + 1` bits
+  * So the length of the entire code is `2 * floor(lb(G)) + 1`
+  * gamma codes are always of off length.
+  * Gamma codes are within a factor of 2 of the optimal encoding length `lb(G)`
+    * assuming the freq of a gap G is porportional to `lb(G)`
 * For 13 (offset 101), this is 3
 * Encode length in unary code: 1110.
 * Gamma code of 13 is the concatenation of length and offset: 1110101
+* Gamma codes are independent of the distribution of gaps.
+  * And independent of the distribution.
+  * They're prefix-free and parameter-free.
 
 ```
 number | unary | length | offset | gamma-code
