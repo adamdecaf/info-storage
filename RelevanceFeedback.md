@@ -45,3 +45,20 @@ Then we can use the [Rocchio algorithm] to and and adjust our relevance feedback
 * `c`: `0.1` (or even `0`)
 
 [Rocchio algorithm]: http://en.wikipedia.org/wiki/Rocchio_algorithm
+
+### Automatic Thesaurus Generation
+
+* Method 1: Two words are similar if they co-occur with similar words
+  * car and motorcycle
+* Method 2: similar if they occur in a given grammatical releation with the same words
+  * eat, prepare, peal, juice (apples and pears)
+
+### Take-Away
+
+* Interactive relevance feedback improves initial retieval results
+* Best known model: Rocchio feedback
+* Query expansion: improve retrieval results by adding synonyms / related terms
+  * Sources for related terms could be:
+    * manual process
+    * automatic tehesaurus
+    * query logs
